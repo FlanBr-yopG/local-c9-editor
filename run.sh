@@ -2,7 +2,7 @@
 
 container=c9
 image=yopgflanbr-node
-version=0.0.6
+version=0.0.8
 
 main() {
   cat > Dockerfile <<'EOFdf'
@@ -14,7 +14,8 @@ RUN mkdir /w; chown node /w /home/node/app
 USER node
 WORKDIR /home/node/app
 RUN git init; git remote add origin git://github.com/c9/core.git; git fetch origin; \
-    git checkout e5f6d5c4a801f8b8c76aa7eb212d321785d63612
+    git checkout e5f6d5c4a801f8b8c76aa7eb212d321785d63612; \
+    scripts/install-sdk.sh
 RUN pwd
 ENTRYPOINT ["node", "server.js"]
 CMD ["-w", "/w"]
@@ -46,7 +47,7 @@ EOFdf
     fi ;
     echo "NOTE: Not already running. Starting it now."
     docker run -d --name $container -p 8181:8181 \
-      -v $(pwd)/..:/w "$image:$version" \
+      -v $(pwd)/../..:/w "$image:$version" \
     ;
   }
 }
