@@ -2,14 +2,15 @@
 
 container=c9
 image=yopgflanbr-node
-version=0.0.19
+version=0.0.23
 latest_c9_core_commit=$(git ls-remote git://github.com/c9/core HEAD | awk '{print $1}')
 
 main() {
   cat > Dockerfile <<'EOFdf'
 FROM node
 ENV NODE_ENV=production
-RUN npm i -g npm@4.6.1 &> /tmp/npm_i_g_npm_4_6_1.log # Avoids "Error: Cannot find module 'amd-loader'".
+# Avoid "Error: Cannot find module 'amd-loader'":
+RUN npm i -g npm@4.6.1 > /tmp/npm_i_g_npm_4_6_1.log
 RUN yum -y install git || apt-get -y install git
 RUN mkdir /home/node/app; chown node /home/node/app
 RUN mkdir /w; chown node /w
@@ -18,17 +19,18 @@ WORKDIR /home/node/app
 ARG latest_c9_core_commit
 RUN git init; git remote add origin git://github.com/c9/core.git; git fetch origin; \
     git checkout $latest_c9_core_commit; \
-    scripts/install-sdk.sh &> scripts_install_sdk.log ; \
+    scripts/install-sdk.sh > /tmp/scripts_install_sdk.log ; \
     git reset HEAD --hard;
 USER root
-RUN npm i -g npm &> /home/node/app/npm_i_g_npm.log
+RUN npm i -g npm > /home/node/app/npm_i_g_npm.log
 USER node
-RUN sed -i -e 's_127.0.0.1_0.0.0.0_g' configs/standalone.js # Stops c9 from forcing authentication.
+# Stop c9 from forcing authentication:
+RUN sed -i -e 's_127.0.0.1_0.0.0.0_g' configs/standalone.js
 # NOTE: Expose c9 core's default port:
 EXPOSE 8181
-ENTRYPOINT ["node", "server.js", "-w", "/w", "--listen", "0.0.0.0"]
-# CMD ["-a", "user1:pass1", "--debug"]
-CMD ["--debug"]
+# ENTRYPOINT ["node", "server.js", "-w", "/w", "--listen", "0.0.0.0"]
+# # CMD ["-a", "user1:pass1", "--debug"]
+# CMD ["--debug"
 EOFdf
   set -exu
   local already_image=$(docker images -f=reference="$image:$version" --format '{{.ID}}')
