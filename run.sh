@@ -2,8 +2,8 @@
 
 container=c9
 image=yopgflanbr-node
-version=0.0.17
-latest_c9_core_commit=$(git ls-remote git://github.com/c9/core HEAD)
+version=0.0.18
+latest_c9_core_commit=$(git ls-remote git://github.com/c9/core HEAD | awk '{print $1}')
 
 main() {
   cat > Dockerfile <<'EOFdf'
