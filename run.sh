@@ -2,7 +2,7 @@
 
 container=c9
 image=yopgflanbr-node
-version=0.0.26
+version=0.0.27
 latest_c9_core_commit=$(git ls-remote git://github.com/c9/core HEAD | awk '{print $1}')
 
 main() {
@@ -18,7 +18,7 @@ USER node
 WORKDIR /home/node/app
 ARG latest_c9_core_commit
 RUN git init; git remote add origin git://github.com/c9/core.git; git fetch origin; \
-    git checkout $latest_c9_core_commit; \
+    git checkout $latest_c9_core_commit > /tmp/git_checkout.log 2>&1 ; \
     scripts/install-sdk.sh > /tmp/scripts_install_sdk.log 2>&1 ; \
     git reset HEAD --hard;
 USER root
