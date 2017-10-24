@@ -2,7 +2,7 @@
 
 container=c9
 image=yopgflanbr-node
-version=0.0.25
+version=0.0.26
 latest_c9_core_commit=$(git ls-remote git://github.com/c9/core HEAD | awk '{print $1}')
 
 main() {
@@ -11,7 +11,7 @@ FROM node
 ENV NODE_ENV=production
 # Avoid "Error: Cannot find module 'amd-loader'":
 RUN npm i -g npm@4.6.1 > /tmp/npm_i_g_npm_4_6_1.log 2>&1
-RUN yum -y install git || apt-get -y install git
+RUN bash -c 'which git || { yum -y install git || apt-get -y install git ; }'
 RUN mkdir /home/node/app; chown node /home/node/app
 RUN mkdir /w; chown node /w
 USER node
