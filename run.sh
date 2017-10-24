@@ -2,7 +2,7 @@
 
 container=c9
 image=yopgflanbr-node
-version=0.0.16
+version=0.0.17
 latest_c9_core_commit=$(git ls-remote git://github.com/c9/core HEAD)
 
 main() {
@@ -29,6 +29,7 @@ ENTRYPOINT ["node", "server.js", "-w", "/w", "--listen", "0.0.0.0"]
 # CMD ["-a", "user1:pass1", "--debug"]
 CMD ["--debug"]
 EOFdf
+  set -exu
   local already_image=$(docker images -f=reference="$image:$version" --format '{{.ID}}')
   [[ $already_image ]] && echo "NOTE: Image '$image:$version' already exists; not re-building." \
   || {
