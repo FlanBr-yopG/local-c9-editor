@@ -2,7 +2,7 @@
 
 container=c9
 image=yopgflanbr-node
-version=0.0.23
+version=0.0.24
 latest_c9_core_commit=$(git ls-remote git://github.com/c9/core HEAD | awk '{print $1}')
 
 main() {
@@ -28,9 +28,9 @@ USER node
 RUN sed -i -e 's_127.0.0.1_0.0.0.0_g' configs/standalone.js
 # NOTE: Expose c9 core's default port:
 EXPOSE 8181
-# ENTRYPOINT ["node", "server.js", "-w", "/w", "--listen", "0.0.0.0"]
-# # CMD ["-a", "user1:pass1", "--debug"]
-# CMD ["--debug"
+ENTRYPOINT ["node", "server.js", "-w", "/w", "--listen", "0.0.0.0"]
+# CMD ["-a", "user1:pass1", "--debug"]
+CMD ["--debug"
 EOFdf
   set -exu
   local already_image=$(docker images -f=reference="$image:$version" --format '{{.ID}}')
