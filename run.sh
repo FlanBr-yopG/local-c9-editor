@@ -2,38 +2,46 @@
 
 container=c9
 image=yopgflanbr-node
-version=0.0.11
+version=0.0.16
+latest_c9_core_commit=$(git ls-remote git://github.com/c9/core HEAD)
 
 main() {
   cat > Dockerfile <<'EOFdf'
 FROM node
 ENV NODE_ENV=production
-RUN npm i -g npm@4.6.1
+RUN npm i -g npm@4.6.1 # Avoids "Error: Cannot find module 'amd-loader'".
 RUN yum -y install git || apt-get -y install git
-RUN mkdir /home/node/app
-RUN mkdir /w; chown node /w /home/node/app
+RUN mkdir /home/node/app; chown node /home/node/app
+RUN mkdir /w; chown node /w
 USER node
 WORKDIR /home/node/app
+ARG latest_c9_core_commit
 RUN git init; git remote add origin git://github.com/c9/core.git; git fetch origin; \
-    git checkout e5f6d5c4a801f8b8c76aa7eb212d321785d63612; \
+    git checkout $latest_c9_core_commit; \
     scripts/install-sdk.sh; \
     git reset HEAD --hard;
 USER root
 RUN npm i -g npm
 USER node
-RUN pwd
-ENTRYPOINT ["node", "server.js"]
-CMD ["-w", "/w", "-p", "8181", "--listen", "127.0.0.1"]
+RUN sed -i -e 's_127.0.0.1_0.0.0.0_g' configs/standalone.js # Stops c9 from forcing authentication.
+EXPOSE 8181 # Default.
+ENTRYPOINT ["node", "server.js", "-w", "/w", "--listen", "0.0.0.0"]
+# CMD ["-a", "user1:pass1", "--debug"]
+CMD ["--debug"]
 EOFdf
-  pwd ;
   local already_image=$(docker images -f=reference="$image:$version" --format '{{.ID}}')
   [[ $already_image ]] && echo "NOTE: Image '$image:$version' already exists; not re-building." \
   || {
     rm -rf tmp &>/dev/null || true ;
     mkdir tmp ; cp Dockerfile tmp/ ;
-    cd tmp ; docker build --rm -t "$image:$version" . ;
+    local pwd0=$(pwd)
+    cd tmp ;
+    docker build --rm -t "$image:$version" \
+      --build-arg latest_c9_core_commit=$latest_c9_core_commit \
+      . \
+    ;
+    cd "$pwd0"
   }
-  pwd
   local already_running=$(docker ps -f "name=$container" --format '{{.ID}}')
   [[ $already_running ]] && {
     if running_this_version; then
@@ -52,7 +60,7 @@ EOFdf
     fi ;
     echo "NOTE: Not already running. Starting it now."
     docker run -d --name $container -p 8181:8181 \
-      -v $(pwd)/../../..:/w "$image:$version" \
+      -v $(pwd)/../..:/w "$image:$version" \
     ;
   }
 }
